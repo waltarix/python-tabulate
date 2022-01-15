@@ -479,7 +479,7 @@ def test_grid_multiline_with_empty_cells_headerless():
 
 
 def test_fancy_grid():
-    "Output: fancy_grid with headers"
+    "Output: fancy_grid_luxury with headers"
     expected = "\n".join(
         [
             "╒═══════════╤═══════════╕",
@@ -491,12 +491,12 @@ def test_fancy_grid():
             "╘═══════════╧═══════════╛",
         ]
     )
-    result = tabulate(_test_table, _test_table_headers, tablefmt="fancy_grid")
+    result = tabulate(_test_table, _test_table_headers, tablefmt="fancy_grid_luxury")
     assert_equal(expected, result)
 
 
 def test_fancy_grid_headerless():
-    "Output: fancy_grid without headers"
+    "Output: fancy_grid_luxury without headers"
     expected = "\n".join(
         [
             "╒══════╤══════════╕",
@@ -506,12 +506,12 @@ def test_fancy_grid_headerless():
             "╘══════╧══════════╛",
         ]
     )
-    result = tabulate(_test_table, tablefmt="fancy_grid")
+    result = tabulate(_test_table, tablefmt="fancy_grid_luxury")
     assert_equal(expected, result)
 
 
 def test_fancy_grid_multiline_headerless():
-    "Output: fancy_grid with multiline cells without headers"
+    "Output: fancy_grid_luxury with multiline cells without headers"
     table = [["foo bar\nbaz\nbau", "hello"], ["", "multiline\nworld"]]
     expected = "\n".join(
         [
@@ -525,12 +525,12 @@ def test_fancy_grid_multiline_headerless():
             "╘═════════╧═══════════╛",
         ]
     )
-    result = tabulate(table, stralign="center", tablefmt="fancy_grid")
+    result = tabulate(table, stralign="center", tablefmt="fancy_grid_luxury")
     assert_equal(expected, result)
 
 
 def test_fancy_grid_multiline():
-    "Output: fancy_grid with multiline cells with headers"
+    "Output: fancy_grid_luxury with multiline cells with headers"
     table = [[2, "foo\nbar"]]
     headers = ("more\nspam \x1b[31meggs\x1b[0m", "more spam\n& eggs")
     expected = "\n".join(
@@ -544,12 +544,12 @@ def test_fancy_grid_multiline():
             "╘═════════════╧═════════════╛",
         ]
     )
-    result = tabulate(table, headers, tablefmt="fancy_grid")
+    result = tabulate(table, headers, tablefmt="fancy_grid_luxury")
     assert_equal(expected, result)
 
 
 def test_fancy_grid_multiline_with_empty_cells():
-    "Output: fancy_grid with multiline cells and empty cells with headers"
+    "Output: fancy_grid_luxury with multiline cells and empty cells with headers"
     table = [
         ["hdr", "data", "fold"],
         ["1", "", ""],
@@ -567,12 +567,12 @@ def test_fancy_grid_multiline_with_empty_cells():
             "╘═══════╧════════════════╧════════╛",
         ]
     )
-    result = tabulate(table, headers="firstrow", tablefmt="fancy_grid")
+    result = tabulate(table, headers="firstrow", tablefmt="fancy_grid_luxury")
     assert_equal(expected, result)
 
 
 def test_fancy_grid_multiline_with_empty_cells_headerless():
-    "Output: fancy_grid with multiline cells and empty cells without headers"
+    "Output: fancy_grid_luxury with multiline cells and empty cells without headers"
     table = [["0", "", ""], ["1", "", ""], ["2", "very long data", "fold\nthis"]]
     expected = "\n".join(
         [
@@ -586,7 +586,7 @@ def test_fancy_grid_multiline_with_empty_cells_headerless():
             "╘═══╧════════════════╧══════╛",
         ]
     )
-    result = tabulate(table, tablefmt="fancy_grid")
+    result = tabulate(table, tablefmt="fancy_grid_luxury")
     assert_equal(expected, result)
 
 
