@@ -307,11 +307,11 @@ def test_mix_normal_and_wide_characters():
         result = tabulate([[ru_text], [cn_text]], tablefmt="grid")
         expected = "\n".join(
             [
-                "+--------+",
+                "+--------------+",
                 "| \u043f\u0440\u0438\u0432\u0435\u0442 |",
-                "+--------+",
-                "| \u4f60\u597d   |",
-                "+--------+",
+                "+--------------+",
+                "| \u4f60\u597d         |",
+                "+--------------+",
             ]
         )
         assert_equal(result, expected)

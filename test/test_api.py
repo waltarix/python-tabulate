@@ -52,6 +52,7 @@ def test_tabulate_signature():
         ("maxcolwidths", None),
         ("rowalign", None),
         ("maxheadercolwidths", None),
+        ("gutter", None),
     ]
     _check_signature(tabulate, expected_sig)
 

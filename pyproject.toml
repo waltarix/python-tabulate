@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.2.0", "wheel", "setuptools_scm[toml]>=3.4.3"]
+requires = ["setuptools>=61.2.0", "wheel", "setuptools_scm[toml]>=7.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -13,14 +13,16 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Topic :: Software Development :: Libraries",
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 dynamic = ["version"]
+dependencies = [
+    "wcwidth @ https://github.com/waltarix/python-wcwidth/archive/0.2.5-custom-r1.tar.gz"
+]
 
 [project.urls]
 Homepage = "https://github.com/astanin/python-tabulate"
@@ -36,3 +38,4 @@ packages = ["tabulate"]
 
 [tool.setuptools_scm]
 write_to = "tabulate/version.py"
+tag_regex = '^(?:[\w-]+-)?(?P<version>[vV]?\d+(?:\.\d+){0,2})(?P<suffix>[^\+]*(?:\+.*)?)?$'
