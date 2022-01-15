@@ -311,6 +311,16 @@ _table_formats = {
         with_header_hide=None,
     ),
     "fancy_grid": TableFormat(
+        lineabove=Line("┌", "─", "┬", "┐"),
+        linebelowheader=Line("├", "─", "┼", "┤"),
+        linebetweenrows=Line("├", "─", "┼", "┤"),
+        linebelow=Line("└", "─", "┴", "┘"),
+        headerrow=DataRow("│", "│", "│"),
+        datarow=DataRow("│", "│", "│"),
+        padding=1,
+        with_header_hide=None,
+    ),
+    "fancy_grid_luxury": TableFormat(
         lineabove=Line("╒", "═", "╤", "╕"),
         linebelowheader=Line("╞", "═", "╪", "╡"),
         linebetweenrows=Line("├", "─", "┼", "┤"),
@@ -320,13 +330,53 @@ _table_formats = {
         padding=1,
         with_header_hide=None,
     ),
+    "fancy_grid_rounded": TableFormat(
+        lineabove=Line("╭", "─", "┬", "╮"),
+        linebelowheader=Line("├", "─", "┼", "┤"),
+        linebetweenrows=Line("├", "─", "┼", "┤"),
+        linebelow=Line("╰", "─", "┴", "╯"),
+        headerrow=DataRow("│", "│", "│"),
+        datarow=DataRow("│", "│", "│"),
+        padding=1,
+        with_header_hide=None,
+    ),
     "fancy_outline": TableFormat(
+        lineabove=Line("┌", "─", "┬", "┐"),
+        linebelowheader=Line("├", "─", "┼", "┤"),
+        linebetweenrows=None,
+        linebelow=Line("└", "─", "┴", "┘"),
+        headerrow=DataRow("│", "│", "│"),
+        datarow=DataRow("│", "│", "│"),
+        padding=1,
+        with_header_hide=None,
+    ),
+    "fancy_outline_luxury": TableFormat(
         lineabove=Line("╒", "═", "╤", "╕"),
         linebelowheader=Line("╞", "═", "╪", "╡"),
         linebetweenrows=None,
         linebelow=Line("╘", "═", "╧", "╛"),
         headerrow=DataRow("│", "│", "│"),
         datarow=DataRow("│", "│", "│"),
+        padding=1,
+        with_header_hide=None,
+    ),
+    "fancy_outline_rounded": TableFormat(
+        lineabove=Line("╭", "─", "┬", "╮"),
+        linebelowheader=Line("├", "─", "┼", "┤"),
+        linebetweenrows=None,
+        linebelow=Line("╰", "─", "┴", "╯"),
+        headerrow=DataRow("│", "│", "│"),
+        datarow=DataRow("│", "│", "│"),
+        padding=1,
+        with_header_hide=None,
+    ),
+    "fancy_inline": TableFormat(
+        lineabove=None,
+        linebelowheader=Line("", "─", "┼", ""),
+        linebetweenrows=None,
+        linebelow=None,
+        headerrow=DataRow("", "│", ""),
+        datarow=DataRow("", "│", ""),
         padding=1,
         with_header_hide=None,
     ),
@@ -538,6 +588,8 @@ multiline_formats = {
     "simple": "simple",
     "grid": "grid",
     "fancy_grid": "fancy_grid",
+    "fancy_grid_luxury": "fancy_grid_luxury",
+    "fancy_grid_rounded": "fancy_grid_rounded",
     "pipe": "pipe",
     "orgtbl": "orgtbl",
     "jira": "jira",
@@ -969,7 +1021,7 @@ def _format(val, valtype, floatfmt, missingval="", has_invisible=True):
 
     >>> hrow = ['\u0431\u0443\u043a\u0432\u0430', '\u0446\u0438\u0444\u0440\u0430'] ; \
         tbl = [['\u0430\u0437', 2], ['\u0431\u0443\u043a\u0438', 4]] ; \
-        good_result = '\\u0431\\u0443\\u043a\\u0432\\u0430      \\u0446\\u0438\\u0444\\u0440\\u0430\\n-------  -------\\n\\u0430\\u0437             2\\n\\u0431\\u0443\\u043a\\u0438           4' ; \
+        good_result = '\\u0431\\u0443\\u043a\\u0432\\u0430      \\u0446\\u0438\\u0444\\u0440\\u0430\\n------------  ------------\\n\\u0430\\u0437                     2\\n\\u0431\\u0443\\u043a\\u0438                 4' ; \
         tabulate(tbl, headers=hrow) == good_result
     True
 
@@ -1224,6 +1276,7 @@ def tabulate(
     showindex="default",
     disable_numparse=False,
     colalign=None,
+    gutter=None,
 ):
     """Format a fixed width table for pretty printing.
 
@@ -1363,7 +1416,7 @@ def tabulate(
     "fancy_grid" draws a grid using box-drawing characters:
 
     >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]],
-    ...                ["strings", "numbers"], "fancy_grid"))
+    ...                ["strings", "numbers"], "fancy_grid_luxury"))
     ╒═══════════╤═══════════╕
     │ strings   │   numbers │
     ╞═══════════╪═══════════╡
@@ -1538,7 +1591,7 @@ def tabulate(
     # Numbers are not parsed and are treated the same as strings for alignment.
     # Check if pretty is the format being used and override the defaults so it
     # does not impact other formats.
-    min_padding = MIN_PADDING
+    min_padding = gutter if gutter is not None else MIN_PADDING
     if tablefmt == "pretty":
         min_padding = 0
         disable_numparse = True
@@ -1774,6 +1827,13 @@ def _format_table(fmt, headers, rows, colwidths, colaligns, is_multiline):
         return ""
 
 
+_align_map = {"c": "center", "d": "decimal", "l": "left", "n": "decimal", "r": "right"}
+
+
+def _to_align(align):
+    return _align_map.get(align, align)
+
+
 def _main():
     """\
     Usage: tabulate [options] [FILE ...]
@@ -1805,8 +1865,17 @@ def _main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "h1o:s:F:A:f:",
-            ["help", "header", "output", "sep=", "float=", "align=", "format="],
+            "h1o:s:F:a:f:g:",
+            [
+                "help",
+                "header",
+                "output",
+                "sep=",
+                "float=",
+                "align=",
+                "format=",
+                "gutter=",
+            ],
         )
     except getopt.GetoptError as e:
         print(e)
@@ -1817,6 +1886,7 @@ def _main():
     colalign = None
     tablefmt = "simple"
     sep = r"\s+"
+    gutter = None
     outfile = "-"
     for opt, value in opts:
         if opt in ["-1", "--header"]:
@@ -1825,8 +1895,12 @@ def _main():
             outfile = value
         elif opt in ["-F", "--float"]:
             floatfmt = value
-        elif opt in ["-C", "--colalign"]:
-            colalign = value.split()
+        elif opt in ["-a", "--align"]:
+            if re.match(r"\A[cdlnr]+\Z", value):
+                colalign = list(value)
+            else:
+                colalign = re.split(r"[ ,]", value)
+            colalign = map(_to_align, colalign)
         elif opt in ["-f", "--format"]:
             if value not in tabulate_formats:
                 print("%s is not a supported table format" % value)
@@ -1835,6 +1909,8 @@ def _main():
             tablefmt = value
         elif opt in ["-s", "--sep"]:
             sep = value
+        elif opt in ["-g", "--gutter"]:
+            gutter = int(value)
         elif opt in ["-h", "--help"]:
             print(usage)
             sys.exit(0)
@@ -1852,6 +1928,7 @@ def _main():
                     floatfmt=floatfmt,
                     file=out,
                     colalign=colalign,
+                    gutter=gutter,
                 )
             else:
                 with open(f) as fobj:
@@ -1863,14 +1940,22 @@ def _main():
                         floatfmt=floatfmt,
                         file=out,
                         colalign=colalign,
+                        gutter=gutter,
                     )
 
 
-def _pprint_file(fobject, headers, tablefmt, sep, floatfmt, file, colalign):
+def _pprint_file(fobject, headers, tablefmt, sep, floatfmt, file, colalign, gutter):
     rows = fobject.readlines()
     table = [re.split(sep, r.rstrip()) for r in rows if r.strip()]
     print(
-        tabulate(table, headers, tablefmt, floatfmt=floatfmt, colalign=colalign),
+        tabulate(
+            table,
+            headers,
+            tablefmt,
+            floatfmt=floatfmt,
+            colalign=colalign,
+            gutter=gutter,
+        ),
         file=file,
     )
 
