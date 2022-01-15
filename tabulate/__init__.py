@@ -469,6 +469,16 @@ _table_formats = {
         padding=1,
         with_header_hide=None,
     ),
+    "fancy_inline": TableFormat(
+        lineabove=None,
+        linebelowheader=Line("", "─", "┼", ""),
+        linebetweenrows=None,
+        linebelow=None,
+        headerrow=DataRow("", "│", ""),
+        datarow=DataRow("", "│", ""),
+        padding=1,
+        with_header_hide=None,
+    ),
     "github": TableFormat(
         lineabove=Line("|", "-", "|", "|"),
         linebelowheader=Line("|", "-", "|", "|"),
@@ -1205,7 +1215,7 @@ def _format(val, valtype, floatfmt, intfmt, missingval="", has_invisible=True):
 
     >>> hrow = ['\u0431\u0443\u043a\u0432\u0430', '\u0446\u0438\u0444\u0440\u0430'] ; \
         tbl = [['\u0430\u0437', 2], ['\u0431\u0443\u043a\u0438', 4]] ; \
-        good_result = '\\u0431\\u0443\\u043a\\u0432\\u0430      \\u0446\\u0438\\u0444\\u0440\\u0430\\n-------  -------\\n\\u0430\\u0437             2\\n\\u0431\\u0443\\u043a\\u0438           4' ; \
+        good_result = '\\u0431\\u0443\\u043a\\u0432\\u0430      \\u0446\\u0438\\u0444\\u0440\\u0430\\n------------  ------------\\n\\u0430\\u0437                     2\\n\\u0431\\u0443\\u043a\\u0438                 4' ; \
         tabulate(tbl, headers=hrow) == good_result
     True
 
@@ -1258,7 +1268,7 @@ def _align_header(
 
 
 def _remove_separating_lines(rows):
-    if type(rows) == list:
+    if isinstance(rows, list):
         separating_lines = []
         sans_rows = []
         for index, row in enumerate(rows):
@@ -1564,6 +1574,7 @@ def tabulate(
     maxcolwidths=None,
     rowalign=None,
     maxheadercolwidths=None,
+    gutter=None,
 ):
     """Format a fixed width table for pretty printing.
 
@@ -2085,7 +2096,7 @@ def tabulate(
     # Numbers are not parsed and are treated the same as strings for alignment.
     # Check if pretty is the format being used and override the defaults so it
     # does not impact other formats.
-    min_padding = MIN_PADDING
+    min_padding = gutter if gutter is not None else MIN_PADDING
     if tablefmt == "pretty":
         min_padding = 0
         disable_numparse = True
@@ -2598,6 +2609,19 @@ class _CustomTextWrap(textwrap.TextWrapper):
         return lines
 
 
+_align_map = {
+    "l": "left",
+    "r": "right",
+    "c": "center",
+    "n": "decimal",
+    "d": "default",
+}
+
+
+def _to_align(align):
+    return _align_map.get(align, align)
+
+
 def _main():
     """\
     Usage: tabulate [options] [FILE ...]
@@ -2621,6 +2645,15 @@ def _main():
                               rst, mediawiki, html, latex, latex_raw,
                               latex_booktabs, latex_longtable, tsv
                               (default: simple)
+    -g NUM, --gutter NUM      the minimum character places between output columns
+                              (default: 2)
+    -a FMT, --align FMT       the alignment of each column with the last repeated as needed
+                              l    left
+                              r    right
+                              c    center
+                              n    numeric (aligned on the decimal point)
+                              d    default alignment from column contents
+                              may be preceeded by a number to repeat that many times
     """
     import getopt
     import sys
@@ -2630,8 +2663,18 @@ def _main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "h1o:s:F:A:f:",
-            ["help", "header", "output", "sep=", "float=", "int=", "align=", "format="],
+            "h1o:s:F:a:f:g:",
+            [
+                "help",
+                "header",
+                "output",
+                "sep=",
+                "float=",
+                "int=",
+                "align=",
+                "format=",
+                "gutter=",
+            ],
         )
     except getopt.GetoptError as e:
         print(e)
@@ -2643,6 +2686,7 @@ def _main():
     colalign = None
     tablefmt = "simple"
     sep = r"\s+"
+    gutter = None
     outfile = "-"
     for opt, value in opts:
         if opt in ["-1", "--header"]:
@@ -2653,8 +2697,12 @@ def _main():
             floatfmt = value
         elif opt in ["-I", "--int"]:
             intfmt = value
-        elif opt in ["-C", "--colalign"]:
-            colalign = value.split()
+        elif opt in ["-a", "--align"]:
+            if re.match(r"\A[cdlnr]+\Z", value):
+                colalign = list(value)
+            else:
+                colalign = re.split(r"[ ,]", value)
+            colalign = map(_to_align, colalign)
         elif opt in ["-f", "--format"]:
             if value not in tabulate_formats:
                 print("%s is not a supported table format" % value)
@@ -2663,11 +2711,13 @@ def _main():
             tablefmt = value
         elif opt in ["-s", "--sep"]:
             sep = value
+        elif opt in ["-g", "--gutter"]:
+            gutter = int(value)
         elif opt in ["-h", "--help"]:
             print(usage)
             sys.exit(0)
     files = [sys.stdin] if not args else args
-    with (sys.stdout if outfile == "-" else open(outfile, "w")) as out:
+    with sys.stdout if outfile == "-" else open(outfile, "w") as out:
         for f in files:
             if f == "-":
                 f = sys.stdin
@@ -2681,6 +2731,7 @@ def _main():
                     intfmt=intfmt,
                     file=out,
                     colalign=colalign,
+                    gutter=gutter,
                 )
             else:
                 with open(f) as fobj:
@@ -2693,10 +2744,13 @@ def _main():
                         intfmt=intfmt,
                         file=out,
                         colalign=colalign,
+                        gutter=gutter,
                     )
 
 
-def _pprint_file(fobject, headers, tablefmt, sep, floatfmt, intfmt, file, colalign):
+def _pprint_file(
+    fobject, headers, tablefmt, sep, floatfmt, intfmt, file, colalign, gutter
+):
     rows = fobject.readlines()
     table = [re.split(sep, r.rstrip()) for r in rows if r.strip()]
     print(
@@ -2707,6 +2761,7 @@ def _pprint_file(fobject, headers, tablefmt, sep, floatfmt, intfmt, file, colali
             floatfmt=floatfmt,
             intfmt=intfmt,
             colalign=colalign,
+            gutter=gutter,
         ),
         file=file,
     )

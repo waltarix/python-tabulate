@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+-custom
+      - v[0-9]+.[0-9]+.[0-9]+-custom-r[0-9]+
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies (pip)
+        run: pip install build setuptools setuptools_scm tox wheel
+
+      - name: Test
+        run: tox -e py312
+
+      - name: Build
+        run: python -m build -nswx .
+
+      - name: Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: dist/*.tar.gz
+          allowUpdates: true
