@@ -64,5 +64,8 @@ setup(
     ],
     py_modules=["tabulate"],
     entry_points={"console_scripts": console_scripts},
+    install_requires=[
+        "wcwidth @ https://github.com/waltarix/python-wcwidth/archive/refs/tags/0.2.5-custom.tar.gz"  # noqa
+    ],
     extras_require={"widechars": ["wcwidth"]},
 )
