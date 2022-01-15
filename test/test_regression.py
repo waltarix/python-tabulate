@@ -323,11 +323,11 @@ def test_mix_normal_and_wide_characters():
         result = tabulate([[ru_text], [cn_text]], tablefmt="grid")
         expected = "\n".join(
             [
-                "+--------+",
+                "+--------------+",
                 "| \u043f\u0440\u0438\u0432\u0435\u0442 |",
-                "+--------+",
-                "| \u4f60\u597d   |",
-                "+--------+",
+                "+--------------+",
+                "| \u4f60\u597d         |",
+                "+--------------+",
             ]
         )
         assert_equal(result, expected)
@@ -341,7 +341,7 @@ def test_multiline_with_wide_characters():
         import wcwidth  # noqa
 
         table = [["가나\n가ab", "가나", "가나"]]
-        result = tabulate(table, tablefmt="fancy_grid")
+        result = tabulate(table, tablefmt="fancy_grid_luxury")
         expected = "\n".join(
             [
                 "╒══════╤══════╤══════╕",
